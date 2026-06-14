@@ -1,0 +1,142 @@
+/* ============================================
+   EcoTrack Design Tokens
+   ============================================ */
+
+:root {
+  /* ---- Color Palette (Dark Mode Default) ---- */
+  --bg-primary: #0a0f1a;
+  --bg-secondary: #0f1628;
+  --bg-surface: rgba(16, 24, 48, 0.65);
+  --bg-surface-hover: rgba(22, 34, 66, 0.75);
+  --bg-surface-solid: #121d38;
+  --bg-input: rgba(10, 15, 30, 0.6);
+
+  --accent-green: #00d68f;
+  --accent-green-dim: rgba(0, 214, 143, 0.15);
+  --accent-green-glow: rgba(0, 214, 143, 0.3);
+  --accent-teal: #00b4d8;
+  --accent-teal-dim: rgba(0, 180, 216, 0.15);
+  --accent-amber: #f5a623;
+  --accent-amber-dim: rgba(245, 166, 35, 0.15);
+  --accent-coral: #ff6b6b;
+  --accent-coral-dim: rgba(255, 107, 107, 0.15);
+  --accent-purple: #a78bfa;
+  --accent-purple-dim: rgba(167, 139, 250, 0.15);
+
+  --text-primary: #e8ecf1;
+  --text-secondary: #8892a4;
+  --text-tertiary: #5a6478;
+  --text-inverse: #0a0f1a;
+
+  --border-subtle: rgba(255, 255, 255, 0.06);
+  --border-default: rgba(255, 255, 255, 0.1);
+  --border-strong: rgba(255, 255, 255, 0.18);
+  --border-accent: rgba(0, 214, 143, 0.3);
+
+  /* ---- Gradients ---- */
+  --gradient-hero: linear-gradient(135deg, #00d68f, #00b4d8);
+  --gradient-hero-subtle: linear-gradient(135deg, rgba(0,214,143,0.2), rgba(0,180,216,0.2));
+  --gradient-warm: linear-gradient(135deg, #f5a623, #ff6b6b);
+  --gradient-cool: linear-gradient(135deg, #00b4d8, #a78bfa);
+  --gradient-bg: radial-gradient(ellipse at 20% 50%, rgba(0,214,143,0.05) 0%, transparent 50%),
+                 radial-gradient(ellipse at 80% 20%, rgba(0,180,216,0.05) 0%, transparent 50%);
+
+  /* ---- Typography ---- */
+  --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-heading: 'Space Grotesk', 'Inter', sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.25rem;
+  --text-2xl: 1.5rem;
+  --text-3xl: 2rem;
+  --text-4xl: 2.5rem;
+  --text-5xl: 3.5rem;
+
+  --weight-light: 300;
+  --weight-normal: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+  --weight-bold: 700;
+
+  --leading-tight: 1.2;
+  --leading-normal: 1.5;
+  --leading-relaxed: 1.7;
+
+  /* ---- Spacing ---- */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+  --space-20: 5rem;
+
+  /* ---- Border Radius ---- */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --radius-full: 9999px;
+
+  /* ---- Shadows ---- */
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 8px 30px rgba(0, 0, 0, 0.5);
+  --shadow-glow-green: 0 0 20px rgba(0, 214, 143, 0.2);
+  --shadow-glow-teal: 0 0 20px rgba(0, 180, 216, 0.2);
+
+  /* ---- Glassmorphism ---- */
+  --glass-bg: rgba(16, 24, 48, 0.5);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-blur: blur(16px);
+
+  /* ---- Transitions ---- */
+  --transition-fast: 150ms ease;
+  --transition-base: 250ms ease;
+  --transition-slow: 400ms ease;
+  --transition-spring: 500ms cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  /* ---- Z-Index ---- */
+  --z-base: 1;
+  --z-dropdown: 100;
+  --z-sticky: 200;
+  --z-sidebar: 300;
+  --z-modal: 500;
+  --z-toast: 600;
+  --z-tooltip: 700;
+
+  /* ---- Sidebar ---- */
+  --sidebar-width: 260px;
+  --sidebar-collapsed: 72px;
+}
+
+/* ---- Light Mode Override ---- */
+@media (prefers-color-scheme: light) {
+  :root[data-theme="auto"] {
+    --bg-primary: #f5f7fa;
+    --bg-secondary: #e8ecf1;
+    --bg-surface: rgba(255, 255, 255, 0.8);
+    --bg-surface-hover: rgba(255, 255, 255, 0.95);
+    --bg-surface-solid: #ffffff;
+    --bg-input: rgba(0, 0, 0, 0.03);
+    --text-primary: #1a1f2e;
+    --text-secondary: #5a6478;
+    --text-tertiary: #8892a4;
+    --border-subtle: rgba(0, 0, 0, 0.04);
+    --border-default: rgba(0, 0, 0, 0.08);
+    --border-strong: rgba(0, 0, 0, 0.15);
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08);
+    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.1);
+    --shadow-lg: 0 8px 30px rgba(0, 0, 0, 0.12);
+    --glass-bg: rgba(255, 255, 255, 0.6);
+    --glass-border: rgba(0, 0, 0, 0.06);
+  }
+}
