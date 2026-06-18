@@ -4,10 +4,12 @@
 import { Storage } from '../core/storage.js';
 import { ContextEngine } from '../core/context-engine.js';
 import { QuizEngine } from '../core/quiz-engine.js';
+import { AuthEngine } from '../core/auth-engine.js';
 
 const storage = new Storage();
 const ctx = new ContextEngine();
 const quizEngine = new QuizEngine();
+const auth = new AuthEngine();
 
 export function renderProfile() {
   const profile = ctx.getUserProfile();
@@ -53,14 +55,18 @@ export function renderProfile() {
       </div>
     ` : ''}
 
-    <!-- Data Management -->
+    <!-- Data Management & Account -->
     <div class="card" style="margin-bottom:var(--space-6)">
-      <h3 style="margin-bottom:var(--space-4)">💾 Data Management</h3>
+      <h3 style="margin-bottom:var(--space-4)">💾 Data & Account</h3>
       <p style="font-size:var(--text-sm);color:var(--text-secondary);margin-bottom:var(--space-4)">All your data is stored locally in your browser. No data is sent to any server.</p>
       <div style="display:flex;gap:var(--space-3);flex-wrap:wrap">
         <button class="btn btn--secondary" id="export-data">📤 Export Data</button>
         <label class="btn btn--secondary" style="cursor:pointer">📥 Import Data<input type="file" accept=".json" id="import-data" style="display:none" /></label>
         <button class="btn btn--danger" id="reset-data">🗑️ Reset All Data</button>
+      </div>
+      <div class="divider"></div>
+      <div style="display:flex;gap:var(--space-3);flex-wrap:wrap">
+        <button class="btn btn--ghost" id="logout-btn">🚪 Log Out</button>
       </div>
     </div>
 
@@ -121,6 +127,11 @@ export function renderProfile() {
         window.location.hash = '#/onboarding';
         window.location.reload();
       }
+    });
+
+    document.getElementById('logout-btn')?.addEventListener('click', () => {
+      auth.logout();
+      window.location.hash = '#/login';
     });
 
     document.getElementById('reduced-motion')?.addEventListener('change', (e) => {

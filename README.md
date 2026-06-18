@@ -120,7 +120,7 @@ User Input → Context Engine → Profile Analysis → Decision Engine → Perso
 
 ### Prerequisites
 - Node.js 18+
-- npm 9+
+- npm 9+ 
 
 ### Installation
 ```bash

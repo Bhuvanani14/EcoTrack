@@ -15,9 +15,12 @@ import { renderQuizzes } from './pages/quizzes.js';
 import { renderChallenges } from './pages/challenges.js';
 import { renderEducation } from './pages/education.js';
 import { renderProfile } from './pages/profile.js';
+import { renderLogin } from './pages/login.js';
+import { AuthEngine } from './core/auth-engine.js';
 
 const router = new Router();
 const ctx = new ContextEngine();
+const auth = new AuthEngine();
 
 // ---- Sidebar Navigation ---- //
 function renderSidebar() {
@@ -122,6 +125,7 @@ function setupRoutes() {
   router.addRoute('/challenges', () => renderChallenges());
   router.addRoute('/education', () => renderEducation());
   router.addRoute('/profile', () => renderProfile());
+  router.addRoute('/login', () => renderLogin());
   router.addRoute('/', () => renderDashboard());
   router.addRoute('/404', () => `
     <div class="empty-state">
@@ -132,9 +136,12 @@ function setupRoutes() {
     </div>
   `);
 
-  // Route guard: redirect to onboarding if first run
+  // Route guard: auth check -> onboarding check
   router.setGuard((path) => {
-    if (ctx.isFirstRun() && path !== '/onboarding') return '/onboarding';
+    const isAuth = auth.isAuthenticated();
+    if (!isAuth && path !== '/login') return '/login';
+    if (isAuth && path === '/login') return '/dashboard';
+    if (isAuth && ctx.isFirstRun() && path !== '/onboarding') return '/onboarding';
     return null;
   });
 
@@ -144,14 +151,14 @@ function setupRoutes() {
     if (path === '/dashboard' || path === '/') {
       setTimeout(() => initDashboardCharts(), 200);
     }
-    // Show/hide sidebar for onboarding
+    // Show/hide sidebar for onboarding and login
     const sidebar = document.getElementById('sidebar');
     if (sidebar) {
-      sidebar.style.display = path === '/onboarding' ? 'none' : '';
+      sidebar.style.display = (path === '/onboarding' || path === '/login') ? 'none' : '';
     }
     const main = document.getElementById('main-content');
     if (main) {
-      main.style.marginLeft = path === '/onboarding' ? '0' : '';
+      main.style.marginLeft = (path === '/onboarding' || path === '/login') ? '0' : '';
     }
   });
 }
