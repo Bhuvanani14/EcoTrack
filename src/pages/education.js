@@ -1,7 +1,140 @@
 /**
- * EcoTrack Education + Fun Facts Page
+ * EcoTrack Education + Fun Facts Page v2
+ * Adds: Three.js 3D Globe with CO₂ hotspot markers.
  */
 import { getAllFacts, getFactsByCategory, getAllCategories, getDailyFact } from '../core/fun-facts.js';
+
+let globeRenderer = null;
+
+// CO₂ hotspot data [lat, lon, intensity, label]
+const CO2_HOTSPOTS = [
+  [39.9, 116.4, 1.0, 'China'],
+  [38.9, -77.0, 0.85, 'USA'],
+  [55.7, 37.6, 0.7, 'Russia'],
+  [28.6, 77.2, 0.65, 'India'],
+  [35.7, 139.7, 0.55, 'Japan'],
+  [51.5, -0.1, 0.5, 'UK'],
+  [52.5, 13.4, 0.5, 'Germany'],
+  [-23.5, -46.6, 0.45, 'Brazil'],
+  [25.2, 55.3, 0.4, 'UAE'],
+  [-33.9, 151.2, 0.35, 'Australia'],
+];
+
+function latLonToXYZ(lat, lon, radius) {
+  const phi = (90 - lat) * (Math.PI / 180);
+  const theta = (lon + 180) * (Math.PI / 180);
+  return {
+    x: -radius * Math.sin(phi) * Math.cos(theta),
+    y: radius * Math.cos(phi),
+    z: radius * Math.sin(phi) * Math.sin(theta),
+  };
+}
+
+async function initGlobe(containerId) {
+  const container = document.getElementById(containerId);
+  if (!container || globeRenderer) return;
+
+  try {
+    const THREE = await import('three');
+
+    const width = container.offsetWidth;
+    const height = 320;
+
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000);
+    camera.position.z = 2.5;
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setSize(width, height);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    container.appendChild(renderer.domElement);
+    globeRenderer = renderer;
+
+    // Atmosphere glow
+    const atmGeo = new THREE.SphereGeometry(1.05, 32, 32);
+    const atmMat = new THREE.MeshPhongMaterial({
+      color: 0x00b4d8, transparent: true, opacity: 0.08, side: THREE.BackSide
+    });
+    scene.add(new THREE.Mesh(atmGeo, atmMat));
+
+    // Earth sphere (wireframe style)
+    const earthGeo = new THREE.SphereGeometry(1, 48, 48);
+    const earthMat = new THREE.MeshPhongMaterial({
+      color: 0x0a0f1a,
+      wireframe: false,
+      emissive: 0x001122,
+    });
+    const earth = new THREE.Mesh(earthGeo, earthMat);
+    scene.add(earth);
+
+    // Wireframe overlay
+    const wireMat = new THREE.MeshBasicMaterial({ color: 0x1a2a4a, wireframe: true, opacity: 0.3, transparent: true });
+    scene.add(new THREE.Mesh(new THREE.SphereGeometry(1.001, 24, 24), wireMat));
+
+    // Lighting
+    scene.add(new THREE.AmbientLight(0x223344, 2));
+    const sun = new THREE.DirectionalLight(0x4488ff, 3);
+    sun.position.set(5, 3, 5);
+    scene.add(sun);
+
+    // CO₂ hotspot markers
+    CO2_HOTSPOTS.forEach(([lat, lon, intensity]) => {
+      const pos = latLonToXYZ(lat, lon, 1.01);
+      const markerGeo = new THREE.SphereGeometry(0.02 + intensity * 0.025, 8, 8);
+      const markerMat = new THREE.MeshBasicMaterial({
+        color: new THREE.Color().setHSL(0.3 - intensity * 0.3, 1, 0.6),
+        transparent: true, opacity: 0.85,
+      });
+      const marker = new THREE.Mesh(markerGeo, markerMat);
+      marker.position.set(pos.x, pos.y, pos.z);
+      scene.add(marker);
+
+      // Pulse ring
+      const ringGeo = new THREE.RingGeometry(0.035, 0.05, 16);
+      const ringMat = new THREE.MeshBasicMaterial({
+        color: new THREE.Color().setHSL(0.3 - intensity * 0.3, 1, 0.7),
+        side: THREE.DoubleSide, transparent: true, opacity: 0.4,
+      });
+      const ring = new THREE.Mesh(ringGeo, ringMat);
+      ring.position.set(pos.x, pos.y, pos.z);
+      ring.lookAt(0, 0, 0);
+      scene.add(ring);
+    });
+
+    // Mouse drag rotation
+    let isDragging = false, prevX = 0, prevY = 0;
+    let rotX = 0, rotY = 0;
+    renderer.domElement.addEventListener('mousedown', (e) => { isDragging = true; prevX = e.clientX; prevY = e.clientY; });
+    window.addEventListener('mouseup', () => { isDragging = false; });
+    window.addEventListener('mousemove', (e) => {
+      if (!isDragging) return;
+      rotY += (e.clientX - prevX) * 0.005;
+      rotX += (e.clientY - prevY) * 0.005;
+      prevX = e.clientX; prevY = e.clientY;
+    });
+
+    let frame;
+    function animate() {
+      frame = requestAnimationFrame(animate);
+      earth.rotation.y += 0.003;
+      if (isDragging) { earth.rotation.y = rotY; earth.rotation.x = Math.max(-0.5, Math.min(0.5, rotX)); }
+      renderer.render(scene, camera);
+    }
+    animate();
+
+    // Cleanup on navigation
+    window.addEventListener('hashchange', () => {
+      cancelAnimationFrame(frame);
+      renderer.dispose();
+      globeRenderer = null;
+    }, { once: true });
+
+  } catch (e) {
+    console.warn('Three.js globe init failed:', e);
+    if (container) container.innerHTML = '<p style="text-align:center;color:var(--text-tertiary);padding:var(--space-8)">🌍 Globe unavailable in this environment.</p>';
+  }
+}
+
 
 let currentCategory = 'All';
 
@@ -41,6 +174,22 @@ export function renderEducation() {
     <div class="page-header">
       <h1 class="page-header__title">📚 Learn & Discover</h1>
       <p class="page-header__subtitle">Fun facts, myth-busting, and carbon literacy</p>
+    </div>
+
+    <!-- 3D Globe -->
+    <div class="card" style="margin-bottom:var(--space-6);overflow:hidden">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--space-3)">
+        <div>
+          <h3>🌍 Global CO₂ Emissions Map</h3>
+          <p style="font-size:var(--text-xs);color:var(--text-tertiary);margin:var(--space-1) 0 0">Drag to rotate &bull; Coloured dots = top emitting countries</p>
+        </div>
+        <div style="display:flex;gap:var(--space-2);flex-wrap:wrap;font-size:var(--text-xs)">
+          <span style="color:#00d68f">🟢 Lower</span>
+          <span style="color:#f5a623">🟡 Medium</span>
+          <span style="color:#ff5f57">🔴 Higher</span>
+        </div>
+      </div>
+      <div id="globe-container" style="width:100%;height:320px;border-radius:var(--radius-sm);background:radial-gradient(circle at 30% 30%,#0d1b2a,#050a12);cursor:grab"></div>
     </div>
 
     <!-- Daily Fact -->
@@ -118,6 +267,9 @@ export function renderEducation() {
   `;
 
   setTimeout(() => {
+    // Init 3D Globe
+    initGlobe('globe-container');
+
     // Category tabs
     document.querySelectorAll('#fact-tabs .tab').forEach(tab => {
       tab.addEventListener('click', () => {

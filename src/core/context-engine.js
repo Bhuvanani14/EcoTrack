@@ -1,8 +1,20 @@
 /**
- * EcoTrack Context Engine
- * Profiles user behavior, identifies hotspots, and tracks progress.
+ * EcoTrack Context Engine v2
+ * Adds daily budget, avatar state, and AI insights caching.
  */
 import { Storage } from './storage.js';
+import { calculateTotalFootprint } from './calculator-engine.js';
+
+const GLOBAL_AVG_ANNUAL = 4700; // kg CO₂e
+
+// Avatar tier thresholds by eco-score
+const AVATAR_TIERS = [
+  { minScore: 80, key: 'ecohero',  label: 'EcoHero',   icon: '🏆', color: '#00d68f', description: 'You\'re a sustainability champion! Your footprint is exceptional.' },
+  { minScore: 60, key: 'guardian', label: 'Guardian',  icon: '🌳', color: '#38ef7d', description: 'You\'re making a real difference. Keep pushing your limits!' },
+  { minScore: 40, key: 'sprout',   label: 'Sprout',    icon: '🌿', color: '#00b4d8', description: 'You\'re growing in the right direction. A few changes will take you far.' },
+  { minScore: 20, key: 'seedling', label: 'Seedling',  icon: '🌱', color: '#f5a623', description: 'Every journey starts somewhere. Small actions add up!' },
+  { minScore: 0,  key: 'dormant',  label: 'Dormant',   icon: '🪨', color: '#8892a4', description: 'Time to wake up! Your planet needs you.' },
+];
 
 export class ContextEngine {
   constructor() {
@@ -65,5 +77,95 @@ export class ContextEngine {
 
   completeOnboarding() {
     this.storage.set('onboardingComplete', true);
+  }
+
+  // ---- New v2 Methods ---- //
+
+  /**
+   * Returns the user's avatar tier based on eco-score.
+   */
+  getAvatarState(ecoScore = 0) {
+    const tier = AVATAR_TIERS.find(t => ecoScore >= t.minScore) || AVATAR_TIERS[AVATAR_TIERS.length - 1];
+    return tier;
+  }
+
+  /**
+   * Returns all avatar tiers (for progression display).
+   */
+  getAvatarTiers() {
+    return AVATAR_TIERS;
+  }
+
+  /**
+   * Computes the daily carbon budget and how much has been used.
+   * Budget = global 2050 target (2t/yr) / 365 days = 5.48 kg/day
+   */
+  getDailyBudget() {
+    const DAILY_TARGET_KG = (2000 / 365); // ~5.48 kg CO₂e/day (2050 goal)
+    const profile = this.getUserProfile();
+
+    if (!profile?.transport) {
+      return { budget: DAILY_TARGET_KG, used: 0, pct: 0, status: 'unknown' };
+    }
+
+    const fp = calculateTotalFootprint(profile);
+    const dailyActual = (fp.annual.total * 1000) / 365; // kg per day
+
+    const pct = Math.min(200, Math.round((dailyActual / DAILY_TARGET_KG) * 100));
+    const status = pct <= 80 ? 'great' : pct <= 120 ? 'ok' : 'over';
+
+    return {
+      budget: Math.round(DAILY_TARGET_KG * 10) / 10,
+      used: Math.round(dailyActual * 10) / 10,
+      pct,
+      status,
+      overBy: Math.max(0, Math.round((dailyActual - DAILY_TARGET_KG) * 10) / 10),
+    };
+  }
+
+  /**
+   * Returns cached daily insights or null if stale.
+   */
+  getCachedDailyInsights() {
+    const cached = this.storage.get('daily_insights');
+    if (!cached) return null;
+    const today = new Date().toDateString();
+    if (cached.date !== today) return null;
+    return cached.insights;
+  }
+
+  /**
+   * Cache daily insights for today.
+   */
+  cacheDailyInsights(insights) {
+    this.storage.set('daily_insights', {
+      date: new Date().toDateString(),
+      insights
+    });
+  }
+
+  /**
+   * Returns completed daily actions for today.
+   */
+  getTodayCompletedActions() {
+    const data = this.storage.get('daily_actions');
+    if (!data || data.date !== new Date().toDateString()) return [];
+    return data.completed || [];
+  }
+
+  /**
+   * Mark a daily action as complete.
+   */
+  completeDailyAction(actionIndex) {
+    const today = new Date().toDateString();
+    let data = this.storage.get('daily_actions');
+    if (!data || data.date !== today) {
+      data = { date: today, completed: [] };
+    }
+    if (!data.completed.includes(actionIndex)) {
+      data.completed.push(actionIndex);
+    }
+    this.storage.set('daily_actions', data);
+    return data.completed;
   }
 }

@@ -16,6 +16,7 @@ import { renderChallenges } from './pages/challenges.js';
 import { renderEducation } from './pages/education.js';
 import { renderProfile } from './pages/profile.js';
 import { renderLogin } from './pages/login.js';
+import { renderSimulator } from './pages/simulator.js';
 import { AuthEngine } from './core/auth-engine.js';
 
 const router = new Router();
@@ -53,6 +54,9 @@ function renderSidebar() {
       </button></li>
       <li><button class="sidebar__link" data-route="/challenges" aria-label="Challenges">
         <span class="sidebar__link-icon">🏆</span> Challenges
+      </button></li>
+      <li><button class="sidebar__link" data-route="/simulator" aria-label="What-If Simulator">
+        <span class="sidebar__link-icon">🔁</span> Simulator
       </button></li>
       <li><button class="sidebar__link" data-route="/education" aria-label="Learn">
         <span class="sidebar__link-icon">📚</span> Learn
@@ -125,6 +129,7 @@ function setupRoutes() {
   router.addRoute('/challenges', () => renderChallenges());
   router.addRoute('/education', () => renderEducation());
   router.addRoute('/profile', () => renderProfile());
+  router.addRoute('/simulator', () => renderSimulator());
   router.addRoute('/login', () => renderLogin());
   router.addRoute('/', () => renderDashboard());
   router.addRoute('/404', () => `
