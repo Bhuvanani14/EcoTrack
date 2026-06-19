@@ -172,8 +172,15 @@
 .chat-layout {
   display: flex;
   flex-direction: column;
-  height: calc(100vh - var(--space-16) - var(--space-8));
-  max-height: 800px;
+  height: calc(100vh - var(--space-16) - var(--space-8) - 140px);
+  min-height: 380px;
+  max-height: 700px;
+}
+@media (max-width: 768px) {
+  .chat-layout {
+    height: calc(100vh - 180px);
+    max-height: none;
+  }
 }
 .chat-messages {
   flex: 1;

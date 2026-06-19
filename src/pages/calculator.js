@@ -88,13 +88,13 @@ export function renderCalculator() {
     </div>
   `;
 
-  setTimeout(() => {
-    initTabs();
-    const initial = calculateTotalFootprint(formData);
-    if (initial.annual.total > 0) renderResults(initial);
-  }, 100);
-
   return page;
+}
+
+export function bindCalculatorEvents() {
+  initTabs();
+  const initial = calculateTotalFootprint(formData);
+  if (initial.annual.total > 0) renderResults(initial);
 }
 
 function initTabs() {

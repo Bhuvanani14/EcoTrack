@@ -331,13 +331,25 @@ export function renderAssistant() {
     </div>
   `;
 
-  setTimeout(() => {
-    renderMessages();
-    const input = document.getElementById('chat-input');
-    const sendBtn = document.getElementById('chat-send');
-    input?.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey) { sendMessage(input.value); input.value = ''; } });
-    sendBtn?.addEventListener('click', () => { sendMessage(input.value); input.value = ''; });
-  }, 100);
-
   return page;
+}
+
+export function bindAssistantEvents() {
+  renderMessages();
+  const input = document.getElementById('chat-input');
+  const sendBtn = document.getElementById('chat-send');
+  
+  const handleSend = () => {
+    if (!input) return;
+    sendMessage(input.value);
+    input.value = '';
+  };
+
+  input?.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      handleSend();
+    }
+  });
+  
+  sendBtn?.addEventListener('click', handleSend);
 }

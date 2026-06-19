@@ -231,7 +231,7 @@ function showResults() {
   });
 }
 
-function bindQuizEvents() {
+export function bindQuizEvents() {
   document.querySelectorAll('[data-mode]').forEach(btn => {
     btn.addEventListener('click', () => {
       const mode = btn.dataset.mode;
@@ -243,6 +243,5 @@ function bindQuizEvents() {
 
 export function renderQuizzes() {
   const html = showQuizSelection();
-  setTimeout(bindQuizEvents, 100);
   return html;
 }

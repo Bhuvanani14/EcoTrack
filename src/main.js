@@ -9,13 +9,13 @@ import { Router } from './router/router.js';
 import { ContextEngine } from './core/context-engine.js';
 import { renderOnboarding } from './pages/onboarding.js';
 import { renderDashboard, initDashboardCharts } from './pages/dashboard.js';
-import { renderCalculator } from './pages/calculator.js';
-import { renderAssistant } from './pages/assistant.js';
-import { renderQuizzes } from './pages/quizzes.js';
-import { renderChallenges } from './pages/challenges.js';
-import { renderEducation } from './pages/education.js';
-import { renderProfile } from './pages/profile.js';
-import { renderLogin } from './pages/login.js';
+import { renderCalculator, bindCalculatorEvents } from './pages/calculator.js';
+import { renderAssistant, bindAssistantEvents } from './pages/assistant.js';
+import { renderQuizzes, bindQuizEvents } from './pages/quizzes.js';
+import { renderChallenges, bindChallengeEvents } from './pages/challenges.js';
+import { renderEducation, bindEducationEvents } from './pages/education.js';
+import { renderProfile, bindProfileEvents } from './pages/profile.js';
+import { renderLogin, bindLoginEvents, cleanupLogin } from './pages/login.js';
 import { renderSimulator } from './pages/simulator.js';
 import { AuthEngine } from './core/auth-engine.js';
 
@@ -153,9 +153,30 @@ function setupRoutes() {
   // Post-route hooks
   window.addEventListener('routechange', (e) => {
     const path = e.detail.path;
+
+    // Clean up login resources (like canvas animations) when leaving the login page
+    if (path !== '/login') {
+      cleanupLogin();
+    }
+
     if (path === '/dashboard' || path === '/') {
       setTimeout(() => initDashboardCharts(), 200);
+    } else if (path === '/calculator') {
+      bindCalculatorEvents();
+    } else if (path === '/assistant') {
+      bindAssistantEvents();
+    } else if (path === '/quizzes') {
+      bindQuizEvents();
+    } else if (path === '/challenges') {
+      bindChallengeEvents();
+    } else if (path === '/education') {
+      bindEducationEvents();
+    } else if (path === '/profile') {
+      bindProfileEvents();
+    } else if (path === '/login') {
+      bindLoginEvents();
     }
+
     // Show/hide sidebar for onboarding and login
     const sidebar = document.getElementById('sidebar');
     if (sidebar) {
@@ -170,6 +191,10 @@ function setupRoutes() {
 
 // ---- Initialize ---- //
 function init() {
+  // Apply persisted theme on load
+  const savedTheme = ctx.storage.get('theme') || 'auto';
+  document.documentElement.setAttribute('data-theme', savedTheme);
+
   renderSidebar();
   renderMobileHeader();
   setupRoutes();

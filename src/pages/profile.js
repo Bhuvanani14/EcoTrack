@@ -19,6 +19,9 @@ export function renderProfile() {
   const badges = quizEngine.getBadges();
   const challengeHistory = storage.get('challengeHistory') || [];
 
+  const currentTheme = storage.get('theme') || 'auto';
+  const activeClass = (t) => currentTheme === t ? 'btn--primary' : 'btn--secondary';
+
   const html = `
     <div class="page-header">
       <h1 class="page-header__title">⚙️ Profile & Settings</h1>
@@ -54,6 +57,17 @@ export function renderProfile() {
         </div>
       </div>
     ` : ''}
+
+    <!-- Appearance -->
+    <div class="card" style="margin-bottom:var(--space-6)">
+      <h3 style="margin-bottom:var(--space-4)">🎨 Appearance</h3>
+      <p style="font-size:var(--text-sm);color:var(--text-secondary);margin-bottom:var(--space-3)">Choose your preferred theme style</p>
+      <div style="display:flex;gap:var(--space-3);flex-wrap:wrap">
+        <button class="btn ${activeClass('auto')} theme-btn" data-theme="auto" style="flex:1">🌓 System</button>
+        <button class="btn ${activeClass('light')} theme-btn" data-theme="light" style="flex:1">☀️ Light</button>
+        <button class="btn ${activeClass('dark')} theme-btn" data-theme="dark" style="flex:1">🌙 Dark</button>
+      </div>
+    </div>
 
     <!-- Data Management & Account -->
     <div class="card" style="margin-bottom:var(--space-6)">
@@ -98,50 +112,64 @@ export function renderProfile() {
     </div>
   `;
 
-  setTimeout(() => {
-    document.getElementById('export-data')?.addEventListener('click', () => {
-      const data = storage.exportData();
-      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url; a.download = `ecotrack-data-${new Date().toISOString().slice(0, 10)}.json`;
-      a.click(); URL.revokeObjectURL(url);
-    });
-
-    document.getElementById('import-data')?.addEventListener('change', (e) => {
-      const file = e.target.files[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = () => {
-        if (storage.importData(reader.result)) {
-          alert('✅ Data imported successfully! Refreshing...');
-          window.location.reload();
-        } else { alert('❌ Invalid file format.'); }
-      };
-      reader.readAsText(file);
-    });
-
-    document.getElementById('reset-data')?.addEventListener('click', () => {
-      if (confirm('⚠️ This will permanently delete all your EcoTrack data. Are you sure?')) {
-        storage.clear();
-        window.location.hash = '#/onboarding';
-        window.location.reload();
-      }
-    });
-
-    document.getElementById('logout-btn')?.addEventListener('click', () => {
-      auth.logout();
-      window.location.hash = '#/login';
-    });
-
-    document.getElementById('reduced-motion')?.addEventListener('change', (e) => {
-      document.documentElement.classList.toggle('reduced-motion', e.target.checked);
-    });
-
-    document.getElementById('high-contrast')?.addEventListener('change', (e) => {
-      document.documentElement.classList.toggle('high-contrast', e.target.checked);
-    });
-  }, 100);
-
   return html;
+}
+
+export function bindProfileEvents() {
+  document.getElementById('export-data')?.addEventListener('click', () => {
+    const data = storage.exportData();
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = `ecotrack-data-${new Date().toISOString().slice(0, 10)}.json`;
+    a.click(); URL.revokeObjectURL(url);
+  });
+
+  document.getElementById('import-data')?.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (storage.importData(reader.result)) {
+        alert('✅ Data imported successfully! Refreshing...');
+        window.location.reload();
+      } else { alert('❌ Invalid file format.'); }
+    };
+    reader.readAsText(file);
+  });
+
+  document.getElementById('reset-data')?.addEventListener('click', () => {
+    if (confirm('⚠️ This will permanently delete all your EcoTrack data. Are you sure?')) {
+      storage.clear();
+      window.location.hash = '#/onboarding';
+      window.location.reload();
+    }
+  });
+
+  document.getElementById('logout-btn')?.addEventListener('click', () => {
+    auth.logout();
+    window.location.hash = '#/login';
+  });
+
+  document.getElementById('reduced-motion')?.addEventListener('change', (e) => {
+    document.documentElement.classList.toggle('reduced-motion', e.target.checked);
+  });
+
+  document.getElementById('high-contrast')?.addEventListener('change', (e) => {
+    document.documentElement.classList.toggle('high-contrast', e.target.checked);
+  });
+
+  document.querySelectorAll('.theme-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const theme = btn.dataset.theme;
+      storage.set('theme', theme);
+      document.documentElement.setAttribute('data-theme', theme);
+      
+      // Update buttons style
+      document.querySelectorAll('.theme-btn').forEach(b => {
+        const isActive = b.dataset.theme === theme;
+        b.className = `btn theme-btn ${isActive ? 'btn--primary' : 'btn--secondary'}`;
+      });
+    });
+  });
 }

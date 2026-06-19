@@ -93,56 +93,73 @@ export function renderLogin() {
     </div>
   `;
 
-  // Attach events after render
-  setTimeout(() => {
-    const cancelParticles = startParticles('login-particles');
+  return html;
+}
 
-    // Toggle password visibility
-    document.getElementById('toggle-pw')?.addEventListener('click', () => {
-      const pw = document.getElementById('password');
-      pw.type = pw.type === 'password' ? 'text' : 'password';
-    });
+let cancelParticles = null;
 
-    // Auto-fill demo credentials
-    document.getElementById('autofill-btn')?.addEventListener('click', () => {
-      document.getElementById('username').value = 'demo';
-      document.getElementById('password').value = 'password123';
-    });
+export function cleanupLogin() {
+  if (cancelParticles) {
+    cancelParticles();
+    cancelParticles = null;
+  }
+}
 
-    // Login form
-    const form = document.getElementById('login-form');
-    form?.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const username = document.getElementById('username').value.trim();
-      const password = document.getElementById('password').value;
-      const errorEl = document.getElementById('login-error');
-      const btnText = document.getElementById('login-btn-text');
-      const spinner = document.getElementById('login-spinner');
-      const btn = document.getElementById('login-btn');
+export function bindLoginEvents() {
+  cleanupLogin();
+  cancelParticles = startParticles('login-particles');
 
-      // Show loading state
-      btnText.style.display = 'none';
-      spinner.style.display = 'inline';
-      btn.disabled = true;
-      errorEl.style.display = 'none';
+  // Toggle password visibility
+  document.getElementById('toggle-pw')?.addEventListener('click', () => {
+    const pw = document.getElementById('password');
+    if (pw) pw.type = pw.type === 'password' ? 'text' : 'password';
+  });
 
-      const result = await auth.login(username, password);
+  // Auto-fill demo credentials
+  document.getElementById('autofill-btn')?.addEventListener('click', () => {
+    const u = document.getElementById('username');
+    const p = document.getElementById('password');
+    if (u) u.value = 'demo';
+    if (p) p.value = 'password123';
+  });
 
-      btnText.style.display = 'inline';
-      spinner.style.display = 'none';
-      btn.disabled = false;
+  // Login form
+  const form = document.getElementById('login-form');
+  form?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const usernameEl = document.getElementById('username');
+    const passwordEl = document.getElementById('password');
+    const username = usernameEl ? usernameEl.value.trim() : '';
+    const password = passwordEl ? passwordEl.value : '';
+    const errorEl = document.getElementById('login-error');
+    const btnText = document.getElementById('login-btn-text');
+    const spinner = document.getElementById('login-spinner');
+    const btn = document.getElementById('login-btn');
 
-      if (result.success) {
-        cancelParticles?.();
-        window.location.hash = '#/dashboard';
-      } else {
+    // Show loading state
+    if (btnText) btnText.style.display = 'none';
+    if (spinner) spinner.style.display = 'inline';
+    if (btn) btn.disabled = true;
+    if (errorEl) errorEl.style.display = 'none';
+
+    const result = await auth.login(username, password);
+
+    if (btnText) btnText.style.display = 'inline';
+    if (spinner) spinner.style.display = 'none';
+    if (btn) btn.disabled = false;
+
+    if (result.success) {
+      cleanupLogin();
+      window.location.hash = '#/dashboard';
+    } else {
+      if (errorEl) {
         errorEl.textContent = result.error;
         errorEl.style.display = 'block';
-        document.getElementById('password').value = '';
-        document.getElementById('password').focus();
       }
-    });
-  }, 100);
-
-  return html;
+      if (passwordEl) {
+        passwordEl.value = '';
+        passwordEl.focus();
+      }
+    }
+  });
 }

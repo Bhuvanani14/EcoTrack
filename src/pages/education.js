@@ -266,34 +266,35 @@ export function renderEducation() {
     </div>
   `;
 
-  setTimeout(() => {
-    // Init 3D Globe
-    initGlobe('globe-container');
-
-    // Category tabs
-    document.querySelectorAll('#fact-tabs .tab').forEach(tab => {
-      tab.addEventListener('click', () => {
-        currentCategory = tab.dataset.category;
-        const newFacts = currentCategory === 'All' ? getAllFacts() : getFactsByCategory(currentCategory);
-        document.getElementById('fact-carousel').innerHTML = renderFactCards(newFacts);
-        document.querySelectorAll('#fact-tabs .tab').forEach(t => t.classList.remove('tab--active'));
-        tab.classList.add('tab--active');
-        bindShareButtons();
-      });
-    });
-
-    // Myth flip cards
-    document.querySelectorAll('.myth-card').forEach(card => {
-      card.addEventListener('click', () => {
-        const reveal = card.querySelector('.myth-reveal');
-        if (reveal) reveal.style.display = reveal.style.display === 'none' ? 'block' : 'none';
-      });
-    });
-
-    bindShareButtons();
-  }, 100);
-
   return html;
+}
+
+export function bindEducationEvents() {
+  // Init 3D Globe
+  initGlobe('globe-container');
+
+  // Category tabs
+  document.querySelectorAll('#fact-tabs .tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      currentCategory = tab.dataset.category;
+      const newFacts = currentCategory === 'All' ? getAllFacts() : getFactsByCategory(currentCategory);
+      const carousel = document.getElementById('fact-carousel');
+      if (carousel) carousel.innerHTML = renderFactCards(newFacts);
+      document.querySelectorAll('#fact-tabs .tab').forEach(t => t.classList.remove('tab--active'));
+      tab.classList.add('tab--active');
+      bindShareButtons();
+    });
+  });
+
+  // Myth flip cards
+  document.querySelectorAll('.myth-card').forEach(card => {
+    card.addEventListener('click', () => {
+      const reveal = card.querySelector('.myth-reveal');
+      if (reveal) reveal.style.display = reveal.style.display === 'none' ? 'block' : 'none';
+    });
+  });
+
+  bindShareButtons();
 }
 
 function bindShareButtons() {

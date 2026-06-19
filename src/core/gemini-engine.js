@@ -3,9 +3,6 @@
  * Wraps the Gemini REST API with rate limiting, error handling, and fallback.
  */
 
-const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
-const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`;
-
 // Rate limiter: max 10 AI calls per session
 let sessionCallCount = 0;
 const SESSION_LIMIT = 10;
@@ -28,8 +25,10 @@ Always prioritize accuracy using scientific consensus. When uncertain, say so.`;
  * Falls back gracefully if unavailable.
  */
 export async function askGemini(userMessage, userProfile = null) {
+  const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+  
   // Check if API key is configured
-  if (!GEMINI_API_KEY || GEMINI_API_KEY === 'undefined') {
+  if (!apiKey || apiKey === 'undefined') {
     return null; // Fallback to local engine
   }
 
@@ -52,7 +51,8 @@ export async function askGemini(userMessage, userProfile = null) {
     lastCallTime = Date.now();
     sessionCallCount++;
 
-    const response = await fetch(GEMINI_URL, {
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+    const response = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -92,7 +92,8 @@ export async function askGemini(userMessage, userProfile = null) {
  * Returns array of 3 actionable tips.
  */
 export async function generateDailyInsights(userProfile, footprintResult) {
-  if (!GEMINI_API_KEY || GEMINI_API_KEY === 'undefined') return null;
+  const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+  if (!apiKey || apiKey === 'undefined') return null;
   if (sessionCallCount >= SESSION_LIMIT) return null;
 
   const prompt = `Based on this user's carbon footprint data:
@@ -107,7 +108,8 @@ Give exactly 3 short, specific, actionable tips (1 sentence each) to reduce thei
     lastCallTime = Date.now();
     sessionCallCount++;
 
-    const response = await fetch(GEMINI_URL, {
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+    const response = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -143,5 +145,6 @@ export function getAIQuota() {
  * Check if Gemini API is configured.
  */
 export function isAIEnabled() {
-  return !!(GEMINI_API_KEY && GEMINI_API_KEY !== 'undefined' && GEMINI_API_KEY.startsWith('AIza'));
+  const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+  return !!(apiKey && apiKey !== 'undefined' && apiKey.startsWith('AIza'));
 }
