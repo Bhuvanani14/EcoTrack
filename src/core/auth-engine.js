@@ -9,8 +9,8 @@ const SESSION_TIMEOUT_MS = 30 * 60 * 1000; // 30 minutes
 // Demo credentials (SHA-256 of "password123")
 const DEMO_CREDENTIALS = {
   username: 'demo',
-  // SHA-256 of "password123" — precomputed for demo use
-  passwordHash: '1e70f4d1eaed79d3e5c6f85c17abe18d'
+  // SHA-256("password123") — verified correct 64-char hex
+  passwordHash: 'ef92b778bafe771e89245b89ecbc08a44a4e166c06659911881f383d4473e94f'
 };
 
 /**
