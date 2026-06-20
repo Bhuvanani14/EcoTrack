@@ -5,16 +5,13 @@
 import { findAnswer } from '../core/knowledge-base.js';
 import { SurveyEngine } from '../core/survey-engine.js';
 import { getTopRecommendations, getRecommendationsByCategory } from '../core/recommendation-engine.js';
-import { ContextEngine } from '../core/context-engine.js';
+import { ctx } from '../core/context-engine.js';
 import { getRandomFact } from '../core/fun-facts.js';
 import { calculateTotalFootprint } from '../core/calculator-engine.js';
-import { Storage } from '../core/storage.js';
+import { storage } from '../core/storage.js';
 import { formatNumber } from '../utils/format.js';
 import { sanitizeString } from '../utils/sanitize.js';
 import { askGemini, isAIEnabled, getAIQuota } from '../core/gemini-engine.js';
-
-const ctx = new ContextEngine();
-const storage = new Storage();
 let survey = new SurveyEngine();
 let messages = [];
 let shownFactIds = [];

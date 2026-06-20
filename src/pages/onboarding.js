@@ -2,13 +2,10 @@
  * EcoTrack Onboarding Page
  * Guided wizard to collect baseline footprint data.
  */
-import { ContextEngine } from '../core/context-engine.js';
+import { ctx } from '../core/context-engine.js';
 import { calculateTotalFootprint } from '../core/calculator-engine.js';
-import { Storage } from '../core/storage.js';
+import { storage } from '../core/storage.js';
 import { getRandomFact } from '../core/fun-facts.js';
-
-const ctx = new ContextEngine();
-const storage = new Storage();
 
 const STEPS = [
   {

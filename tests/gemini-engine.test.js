@@ -1,9 +1,16 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { askGemini, generateDailyInsights, isAIEnabled } from '../src/core/gemini-engine.js';
 
 // Setup environment variable mock for Vitest
+let mockTime = 1000000;
 beforeEach(() => {
   import.meta.env.VITE_GEMINI_API_KEY = 'AIzaMockKey_1234567890';
+  mockTime += 10000; // Advance time by 10 seconds per test to bypass debounce
+  vi.spyOn(Date, 'now').mockReturnValue(mockTime);
+});
+
+afterEach(() => {
+  vi.restoreAllMocks();
 });
 
 describe('Gemini AI Engine', () => {

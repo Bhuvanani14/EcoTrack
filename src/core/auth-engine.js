@@ -1,8 +1,9 @@
 /**
  * EcoTrack Authentication Engine v2
  * SHA-256 password hashing + 30-minute session expiry.
+ * @module auth-engine
  */
-import { Storage } from './storage.js';
+import { storage } from './storage.js';
 
 const SESSION_TIMEOUT_MS = 30 * 60 * 1000; // 30 minutes
 
@@ -31,7 +32,7 @@ async function hashPassword(password) {
 
 export class AuthEngine {
   constructor() {
-    this.storage = new Storage();
+    this.storage = storage;
   }
 
   /**
@@ -105,3 +106,9 @@ export class AuthEngine {
     return Math.max(0, Math.round(remaining / 60000));
   }
 }
+
+/** 
+ * Shared singleton instance of the AuthEngine. 
+ * @type {AuthEngine}
+ */
+export const auth = new AuthEngine();

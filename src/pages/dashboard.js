@@ -2,15 +2,13 @@
  * EcoTrack Dashboard Page v2
  * Adds: Carbon Avatar, Daily Budget Ring, Top 3 AI Actions, What-If shortcut.
  */
-import { ContextEngine } from '../core/context-engine.js';
+import { ctx } from '../core/context-engine.js';
 import { calculateTotalFootprint } from '../core/calculator-engine.js';
 import { getTopRecommendations } from '../core/recommendation-engine.js';
 import { getDailyFact } from '../core/fun-facts.js';
 import { BENCHMARKS } from '../core/emission-factors.js';
 import { formatNumber, getEcoGradeColor, getCategoryIcon, getCategoryColor } from '../utils/format.js';
 import { generateDailyInsights, isAIEnabled } from '../core/gemini-engine.js';
-
-const ctx = new ContextEngine();
 
 function getFootprint() {
   const profile = ctx.getUserProfile();
@@ -110,6 +108,7 @@ function renderBudgetRing(dailyBudget) {
       <div style="font-size:var(--text-sm);font-weight:600;color:${statusColor}">${statusLabel}</div>
       <p style="font-size:var(--text-xs);color:var(--text-tertiary);margin-top:var(--space-1)">Your daily CO₂ target is <strong>${budget} kg</strong><br>(2050 climate goal)</p>
       <button class="btn btn--ghost" style="margin-top:var(--space-3);font-size:var(--text-xs)" onclick="location.hash='#/simulator'">
+      <button class="btn btn--ghost" style="margin-top:var(--space-3);font-size:var(--text-xs)" data-nav="/simulator">
         🔁 Explore What-If Swaps
       </button>
     </div>
@@ -181,8 +180,8 @@ export function renderDashboard() {
         <div class="empty-state__title">No data yet</div>
         <div class="empty-state__text">Complete the setup wizard or chat with EcoBot to see your dashboard.</div>
         <div style="display:flex;gap:var(--space-3);justify-content:center;flex-wrap:wrap">
-          <button class="btn btn--primary" onclick="location.hash='#/assistant'">🤖 Chat with EcoBot</button>
-          <button class="btn btn--secondary" onclick="location.hash='#/calculator'">🧮 Open Calculator</button>
+          <button class="btn btn--primary" data-nav="/assistant">🤖 Chat with EcoBot</button>
+          <button class="btn btn--secondary" data-nav="/calculator">🧮 Open Calculator</button>
         </div>
       </div>
     `;
@@ -291,7 +290,7 @@ export function renderDashboard() {
       <div class="card" style="text-align:center">
         <div style="font-size:1.5rem">🔁</div>
         <div style="font-size:var(--text-2xl);font-weight:700;color:var(--accent-teal);margin:var(--space-1) 0">Sim</div>
-        <button class="btn btn--ghost" style="font-size:var(--text-xs);padding:4px 12px;margin-top:4px" onclick="location.hash='#/simulator'">What-If?</button>
+        <button class="btn btn--ghost" style="font-size:var(--text-xs);padding:4px 12px;margin-top:4px" data-nav="/simulator">What-If?</button>
       </div>
     </div>
 
@@ -305,6 +304,8 @@ export function renderDashboard() {
 }
 
 export function initDashboardCharts() {
+  bindNavButtons();
+  
   const fp = getFootprint();
   if (!fp) return;
 
@@ -362,6 +363,14 @@ export function initDashboardCharts() {
           }
         }
       }
+    });
+  });
+}
+
+function bindNavButtons() {
+  document.querySelectorAll('button[data-nav]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      window.location.hash = '#' + btn.getAttribute('data-nav');
     });
   });
 }

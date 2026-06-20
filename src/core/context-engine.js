@@ -1,24 +1,15 @@
 /**
  * EcoTrack Context Engine v2
  * Adds daily budget, avatar state, and AI insights caching.
+ * @module context-engine
  */
-import { Storage } from './storage.js';
+import { storage } from './storage.js';
 import { calculateTotalFootprint } from './calculator-engine.js';
-
-const GLOBAL_AVG_ANNUAL = 4700; // kg CO₂e
-
-// Avatar tier thresholds by eco-score
-const AVATAR_TIERS = [
-  { minScore: 80, key: 'ecohero',  label: 'EcoHero',   icon: '🏆', color: '#00d68f', description: 'You\'re a sustainability champion! Your footprint is exceptional.' },
-  { minScore: 60, key: 'guardian', label: 'Guardian',  icon: '🌳', color: '#38ef7d', description: 'You\'re making a real difference. Keep pushing your limits!' },
-  { minScore: 40, key: 'sprout',   label: 'Sprout',    icon: '🌿', color: '#00b4d8', description: 'You\'re growing in the right direction. A few changes will take you far.' },
-  { minScore: 20, key: 'seedling', label: 'Seedling',  icon: '🌱', color: '#f5a623', description: 'Every journey starts somewhere. Small actions add up!' },
-  { minScore: 0,  key: 'dormant',  label: 'Dormant',   icon: '🪨', color: '#8892a4', description: 'Time to wake up! Your planet needs you.' },
-];
+import { AVATAR_TIERS, DAILY_TARGET_KG } from './constants.js';
 
 export class ContextEngine {
   constructor() {
-    this.storage = new Storage();
+    this.storage = storage;
   }
 
   getUserProfile() {
@@ -98,10 +89,9 @@ export class ContextEngine {
 
   /**
    * Computes the daily carbon budget and how much has been used.
-   * Budget = global 2050 target (2t/yr) / 365 days = 5.48 kg/day
+   * @returns {Object} The budget object containing used amount, percentage, and status.
    */
   getDailyBudget() {
-    const DAILY_TARGET_KG = (2000 / 365); // ~5.48 kg CO₂e/day (2050 goal)
     const profile = this.getUserProfile();
 
     if (!profile?.transport) {
@@ -169,3 +159,9 @@ export class ContextEngine {
     return data.completed;
   }
 }
+
+/** 
+ * Shared singleton instance of the ContextEngine. 
+ * @type {ContextEngine}
+ */
+export const ctx = new ContextEngine();

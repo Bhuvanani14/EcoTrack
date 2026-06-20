@@ -1,15 +1,12 @@
 /**
  * EcoTrack Profile & Settings Page
  */
-import { Storage } from '../core/storage.js';
-import { ContextEngine } from '../core/context-engine.js';
+import { storage } from '../core/storage.js';
+import { ctx } from '../core/context-engine.js';
 import { QuizEngine } from '../core/quiz-engine.js';
-import { AuthEngine } from '../core/auth-engine.js';
+import { auth } from '../core/auth-engine.js';
 
-const storage = new Storage();
-const ctx = new ContextEngine();
 const quizEngine = new QuizEngine();
-const auth = new AuthEngine();
 
 export function renderProfile() {
   const profile = ctx.getUserProfile();

@@ -2,9 +2,8 @@
  * EcoTrack Challenges Page v2
  * Fixed: Log Progress with modal, daily check-ins, progress history, proper persistence.
  */
-import { Storage } from '../core/storage.js';
-
-const storage = new Storage();
+import { storage } from '../core/storage.js';
+import { showToast, reRenderPage } from '../utils/dom-helpers.js';
 
 const CHALLENGES = [
   { id: 'car_free', title: 'Car-Free Week', icon: '🚲', category: 'Transport', description: 'Use only public transport, cycling, or walking for one full week.', duration: 7, impactKg: 15, difficulty: 'medium', tips: 'Plan routes in advance, try combining errands.' },
@@ -95,21 +94,7 @@ function completeChallenge(challenge) {
   storage.remove('activeChallenge');
 }
 
-// ---- Toast Notification ---- //
-function showToast(message, type = 'success') {
-  let container = document.getElementById('toast-container');
-  if (!container) {
-    container = document.createElement('div');
-    container.id = 'toast-container';
-    container.className = 'toast-container';
-    document.body.appendChild(container);
-  }
-  const toast = document.createElement('div');
-  toast.className = `toast toast--${type}`;
-  toast.innerHTML = `<span>${type === 'success' ? '✅' : type === 'warning' ? '⚠️' : 'ℹ️'}</span><span>${message}</span>`;
-  container.appendChild(toast);
-  setTimeout(() => toast.remove(), 3500);
-}
+// (Removed local showToast)
 
 // ---- Log Progress Modal ---- //
 function showLogModal() {
@@ -151,15 +136,37 @@ function showLogModal() {
 
   const noteInput = document.getElementById('log-note');
   const countEl = document.getElementById('log-note-count');
+  const closeBtn = document.getElementById('modal-close-btn');
+  const confirmBtn = document.getElementById('modal-confirm-btn');
+  const cancelBtn = document.getElementById('modal-cancel-btn');
+
+  // Focus trap
+  const focusable = [closeBtn, noteInput, confirmBtn, cancelBtn].filter(Boolean);
+  const firstFocusable = focusable[0];
+  const lastFocusable = focusable[focusable.length - 1];
+
+  overlay.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') close();
+    if (e.key === 'Tab') {
+      if (e.shiftKey) {
+        if (document.activeElement === firstFocusable) { e.preventDefault(); lastFocusable.focus(); }
+      } else {
+        if (document.activeElement === lastFocusable) { e.preventDefault(); firstFocusable.focus(); }
+      }
+    }
+  });
 
   noteInput?.addEventListener('input', () => {
     countEl.textContent = `${noteInput.value.length} / 120`;
   });
 
-  const close = () => overlay.remove();
+  const close = () => {
+    overlay.remove();
+    document.getElementById('challenge-log')?.focus();
+  };
 
-  document.getElementById('modal-close-btn')?.addEventListener('click', close);
-  document.getElementById('modal-cancel-btn')?.addEventListener('click', close);
+  closeBtn?.addEventListener('click', close);
+  cancelBtn?.addEventListener('click', close);
   overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
 
   document.getElementById('modal-confirm-btn')?.addEventListener('click', () => {
@@ -174,9 +181,7 @@ function showLogModal() {
       showToast(result.message, 'warning');
     }
     // Re-render page
-    const main = document.getElementById('main-content');
-    if (main) main.innerHTML = renderChallenges();
-    bindChallengeEvents();
+    reRenderPage(renderChallenges, bindChallengeEvents);
   });
 
   noteInput?.focus();
@@ -366,9 +371,7 @@ export function bindChallengeEvents() {
   document.querySelectorAll('.join-challenge').forEach(btn => {
     btn.addEventListener('click', () => {
       joinChallenge(btn.dataset.id);
-      const main = document.getElementById('main-content');
-      if (main) main.innerHTML = renderChallenges();
-      bindChallengeEvents();
+      reRenderPage(renderChallenges, bindChallengeEvents);
       showToast('🏆 Challenge started! Log your first day of progress.', 'success');
     });
   });
@@ -383,17 +386,13 @@ export function bindChallengeEvents() {
       showToast('🧪 Simulated progress logged for next day!', 'success');
     }
     // Re-render page
-    const main = document.getElementById('main-content');
-    if (main) main.innerHTML = renderChallenges();
-    bindChallengeEvents();
+    reRenderPage(renderChallenges, bindChallengeEvents);
   });
 
   document.getElementById('challenge-abandon')?.addEventListener('click', () => {
     if (confirm('Are you sure you want to abandon this challenge? Progress will be lost.')) {
       abandonChallenge();
-      const main = document.getElementById('main-content');
-      if (main) main.innerHTML = renderChallenges();
-      bindChallengeEvents();
+      reRenderPage(renderChallenges, bindChallengeEvents);
       showToast('Challenge abandoned.', 'warning');
     }
   });

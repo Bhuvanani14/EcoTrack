@@ -4,10 +4,8 @@
  */
 import { EMISSION_FACTORS } from '../core/emission-factors.js';
 import { calculateTotalFootprint } from '../core/calculator-engine.js';
-import { ContextEngine } from '../core/context-engine.js';
+import { ctx } from '../core/context-engine.js';
 import { formatNumber } from '../utils/format.js';
-
-const ctx = new ContextEngine();
 
 // Swap scenarios: [label, category, currentKey, swapKey, description, icon]
 const SWAP_SCENARIOS = [
@@ -122,20 +120,22 @@ function renderSimulatorCard(scenario, profile) {
   const color = catColors[scenario.category] || '#00b4d8';
 
   return `
-    <div class="card card--interactive simulator-card" data-scenario="${scenario.id}"
+    <div class="card card--interactive simulator-card" 
+         data-scenario-id="${scenario.id}"
+         data-result='${JSON.stringify({
+           title: scenario.title,
+           icon: scenario.icon,
+           description: scenario.description,
+           savedKgMonth: result.savedKgMonth,
+           savedTYear: result.savedTYear,
+           trees,
+           flights,
+           color
+         })}'
          style="cursor:pointer;transition:all 0.3s ease;border:2px solid transparent"
-         onclick="document.querySelectorAll('.simulator-card').forEach(c=>c.style.borderColor='transparent');
-                  this.style.borderColor='${color}';
-                  document.getElementById('sim-result').style.display='block';
-                  document.getElementById('sim-title').textContent='${scenario.title}';
-                  document.getElementById('sim-icon').textContent='${scenario.icon}';
-                  document.getElementById('sim-desc').textContent='${scenario.description}';
-                  document.getElementById('sim-kg').textContent='${result.savedKgMonth} kg';
-                  document.getElementById('sim-t').textContent='${result.savedTYear}t';
-                  document.getElementById('sim-trees').textContent='${trees}';
-                  document.getElementById('sim-flights').textContent='${flights}';
-                  document.getElementById('sim-bar-fill').style.width=Math.min(100,${result.savedTYear}/5*100)+'%';
-                  document.getElementById('sim-bar-fill').style.background='${color}';">
+         tabindex="0"
+         role="button"
+         aria-label="Select scenario: ${scenario.title}">
       <div style="display:flex;align-items:center;gap:var(--space-3);margin-bottom:var(--space-2)">
         <span style="font-size:1.8rem">${scenario.icon}</span>
         <div>
@@ -253,4 +253,49 @@ export function renderSimulator() {
       </div>
     </div>
   `;
+}
+
+/**
+ * Binds events for the simulator page cards to update the results panel.
+ */
+export function bindSimulatorEvents() {
+  const cards = document.querySelectorAll('.simulator-card');
+  
+  cards.forEach(card => {
+    const handleSelect = () => {
+      cards.forEach(c => c.style.borderColor = 'transparent');
+      
+      const data = JSON.parse(card.getAttribute('data-result'));
+      card.style.borderColor = data.color;
+      
+      const resultPanel = document.getElementById('sim-result');
+      const placeholder = document.getElementById('sim-placeholder');
+      
+      if (placeholder) placeholder.style.display = 'none';
+      if (resultPanel) {
+        resultPanel.style.display = 'block';
+        document.getElementById('sim-title').textContent = data.title;
+        document.getElementById('sim-icon').textContent = data.icon;
+        document.getElementById('sim-desc').textContent = data.description;
+        document.getElementById('sim-kg').textContent = `${data.savedKgMonth} kg`;
+        document.getElementById('sim-t').textContent = `${data.savedTYear}t`;
+        document.getElementById('sim-trees').textContent = data.trees;
+        document.getElementById('sim-flights').textContent = data.flights;
+        
+        const barFill = document.getElementById('sim-bar-fill');
+        if (barFill) {
+          barFill.style.width = `${Math.min(100, (data.savedTYear / 5) * 100)}%`;
+          barFill.style.background = data.color;
+        }
+      }
+    };
+
+    card.addEventListener('click', handleSelect);
+    card.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        handleSelect();
+      }
+    });
+  });
 }

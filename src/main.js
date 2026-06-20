@@ -6,7 +6,7 @@ import './styles/global.css';
 import './styles/components.css';
 import './styles/layouts.css';
 import { Router } from './router/router.js';
-import { ContextEngine } from './core/context-engine.js';
+import { ctx } from './core/context-engine.js';
 import { renderOnboarding } from './pages/onboarding.js';
 import { renderDashboard, initDashboardCharts } from './pages/dashboard.js';
 import { renderCalculator, bindCalculatorEvents } from './pages/calculator.js';
@@ -16,12 +16,10 @@ import { renderChallenges, bindChallengeEvents } from './pages/challenges.js';
 import { renderEducation, bindEducationEvents } from './pages/education.js';
 import { renderProfile, bindProfileEvents } from './pages/profile.js';
 import { renderLogin, bindLoginEvents, cleanupLogin } from './pages/login.js';
-import { renderSimulator } from './pages/simulator.js';
-import { AuthEngine } from './core/auth-engine.js';
+import { renderSimulator, bindSimulatorEvents } from './pages/simulator.js';
+import { auth } from './core/auth-engine.js';
 
 const router = new Router();
-const ctx = new ContextEngine();
-const auth = new AuthEngine();
 
 // ---- Sidebar Navigation ---- //
 function renderSidebar() {
@@ -159,22 +157,21 @@ function setupRoutes() {
       cleanupLogin();
     }
 
-    if (path === '/dashboard' || path === '/') {
-      setTimeout(() => initDashboardCharts(), 200);
-    } else if (path === '/calculator') {
-      bindCalculatorEvents();
-    } else if (path === '/assistant') {
-      bindAssistantEvents();
-    } else if (path === '/quizzes') {
-      bindQuizEvents();
-    } else if (path === '/challenges') {
-      bindChallengeEvents();
-    } else if (path === '/education') {
-      bindEducationEvents();
-    } else if (path === '/profile') {
-      bindProfileEvents();
-    } else if (path === '/login') {
-      bindLoginEvents();
+    const BINDERS = {
+      '/dashboard': () => setTimeout(() => initDashboardCharts(), 200),
+      '/': () => setTimeout(() => initDashboardCharts(), 200),
+      '/calculator': bindCalculatorEvents,
+      '/assistant': bindAssistantEvents,
+      '/quizzes': bindQuizEvents,
+      '/challenges': bindChallengeEvents,
+      '/education': bindEducationEvents,
+      '/profile': bindProfileEvents,
+      '/login': bindLoginEvents,
+      '/simulator': bindSimulatorEvents
+    };
+
+    if (BINDERS[path]) {
+      BINDERS[path]();
     }
 
     // Show/hide sidebar for onboarding and login

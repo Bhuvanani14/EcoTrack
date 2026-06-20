@@ -2,9 +2,7 @@
  * EcoTrack Login Page v2
  * With canvas particle animation and async auth.
  */
-import { AuthEngine } from '../core/auth-engine.js';
-
-const auth = new AuthEngine();
+import { auth } from '../core/auth-engine.js';
 
 function startParticles(canvasId) {
   const canvas = document.getElementById(canvasId);

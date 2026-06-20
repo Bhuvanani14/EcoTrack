@@ -1,6 +1,7 @@
 /**
  * EcoTrack Recommendation Engine
  * Generates personalized, prioritized carbon reduction suggestions.
+ * @module recommendation-engine
  */
 
 const RECOMMENDATIONS = [
@@ -22,6 +23,12 @@ const RECOMMENDATIONS = [
   { id: 'unplug_devices', category: 'energy', title: 'Unplug idle electronics', description: 'Standby power ("vampire energy") accounts for 5-10% of household electricity.', impact: 'low', effort: 'low', savingsKgPerMonth: 8, icon: '🔌', condition: () => true },
 ];
 
+/**
+ * Returns a sorted list of recommendations applicable to the user's profile.
+ * @param {Object} userProfile - User data containing transport, food, energy habits.
+ * @param {string[]} [adoptedIds=[]] - IDs of recommendations already adopted.
+ * @returns {Array<Object>} Sorted list of applicable recommendations.
+ */
 export function getRecommendations(userProfile, adoptedIds = []) {
   const applicable = RECOMMENDATIONS.filter(r =>
     !adoptedIds.includes(r.id) && r.condition(userProfile)
@@ -34,14 +41,31 @@ export function getRecommendations(userProfile, adoptedIds = []) {
   return applicable;
 }
 
+/**
+ * Gets the top N recommendations for a user.
+ * @param {Object} userProfile - User profile data.
+ * @param {number} [count=3] - Number of recommendations to return.
+ * @returns {Array<Object>} Top N recommendations.
+ */
 export function getTopRecommendations(userProfile, count = 3) {
   return getRecommendations(userProfile).slice(0, count);
 }
 
+/**
+ * Gets recommendations filtered by a specific category.
+ * @param {Object} userProfile - User profile data.
+ * @param {string} category - Category string (e.g., 'transport', 'food').
+ * @returns {Array<Object>} Recommendations for the category.
+ */
 export function getRecommendationsByCategory(userProfile, category) {
   return getRecommendations(userProfile).filter(r => r.category === category);
 }
 
+/**
+ * Calculates the total potential monthly CO2 savings.
+ * @param {Array<Object>} recommendations - List of recommendation objects.
+ * @returns {number} Total potential savings in kg per month.
+ */
 export function calculatePotentialSavings(recommendations) {
   return recommendations.reduce((sum, r) => sum + r.savingsKgPerMonth, 0);
 }

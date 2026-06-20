@@ -1,30 +1,43 @@
 /**
  * EcoTrack Calculator Engine
  * Computes emissions for each category and total footprint.
+ * @module calculator-engine
  */
 import { EMISSION_FACTORS, BENCHMARKS, EQUIVALENTS } from './emission-factors.js';
+import { WORK_DAYS_PER_MONTH, MONTHS_PER_YEAR, KG_PER_TONNE } from './constants.js';
 
+/**
+ * Calculates monthly transport emissions based on user input.
+ * @param {Object} transportData - Transport data from user profile.
+ * @returns {number} Monthly transport emissions in kg CO₂e.
+ */
 export function calculateTransportEmissions(transportData) {
+  if (!transportData) return 0;
   let monthlyKg = 0;
-  if (transportData.commuteMode && transportData.commuteDistance) {
+  if (transportData.commuteMode && Number.isFinite(transportData.commuteDistance)) {
     const mode = EMISSION_FACTORS.transport[transportData.commuteMode];
     if (mode) {
-      const workDaysPerMonth = 22;
-      monthlyKg += mode.factor * transportData.commuteDistance * 2 * workDaysPerMonth;
+      monthlyKg += mode.factor * transportData.commuteDistance * 2 * WORK_DAYS_PER_MONTH;
     }
   }
-  if (transportData.shortHaulFlights) {
+  if (Number.isFinite(transportData.shortHaulFlights)) {
     const annualKm = transportData.shortHaulFlights * EMISSION_FACTORS.flight_distances.short_haul * 2;
-    monthlyKg += (annualKm * EMISSION_FACTORS.transport.flight_short.factor) / 12;
+    monthlyKg += (annualKm * EMISSION_FACTORS.transport.flight_short.factor) / MONTHS_PER_YEAR;
   }
-  if (transportData.longHaulFlights) {
+  if (Number.isFinite(transportData.longHaulFlights)) {
     const annualKm = transportData.longHaulFlights * EMISSION_FACTORS.flight_distances.long_haul * 2;
-    monthlyKg += (annualKm * EMISSION_FACTORS.transport.flight_long.factor) / 12;
+    monthlyKg += (annualKm * EMISSION_FACTORS.transport.flight_long.factor) / MONTHS_PER_YEAR;
   }
   return Math.round(monthlyKg * 10) / 10;
 }
 
+/**
+ * Calculates monthly food emissions based on user diet type.
+ * @param {Object} foodData - Food data from user profile.
+ * @returns {number} Monthly food emissions in kg CO₂e.
+ */
 export function calculateFoodEmissions(foodData) {
+  if (!foodData) return 210;
   if (foodData.dietType) {
     let base = EMISSION_FACTORS.diet_monthly[foodData.dietType]?.factor || 210;
     if (foodData.redMeatFrequency === 'daily') base *= 1.2;
@@ -37,7 +50,13 @@ export function calculateFoodEmissions(foodData) {
   return 210;
 }
 
+/**
+ * Calculates monthly energy emissions based on home setup.
+ * @param {Object} energyData - Energy data from user profile.
+ * @returns {number} Monthly energy emissions in kg CO₂e.
+ */
 export function calculateEnergyEmissions(energyData) {
+  if (!energyData) return 0;
   let monthlyKg = 0;
   if (energyData.housingType) {
     monthlyKg += EMISSION_FACTORS.housing[energyData.housingType]?.factor || 200;
@@ -48,18 +67,24 @@ export function calculateEnergyEmissions(energyData) {
   }
   if (energyData.renewableEnergy === 'yes') monthlyKg *= 0.4;
   else if (energyData.renewableEnergy === 'partial') monthlyKg *= 0.7;
-  if (energyData.electricityKwh) {
+  if (Number.isFinite(energyData.electricityKwh)) {
     monthlyKg += energyData.electricityKwh * EMISSION_FACTORS.energy.electricity.factor;
   }
   return Math.round(monthlyKg * 10) / 10;
 }
 
+/**
+ * Calculates monthly lifestyle emissions.
+ * @param {Object} lifestyleData - Lifestyle data from user profile.
+ * @returns {number} Monthly lifestyle emissions in kg CO₂e.
+ */
 export function calculateLifestyleEmissions(lifestyleData) {
+  if (!lifestyleData) return 30;
   let monthlyKg = 0;
   if (lifestyleData.clothingFrequency === 'monthly') monthlyKg += 4 * EMISSION_FACTORS.lifestyle.new_clothes.factor;
   else if (lifestyleData.clothingFrequency === 'quarterly') monthlyKg += 1.5 * EMISSION_FACTORS.lifestyle.new_clothes.factor;
   else if (lifestyleData.clothingFrequency === 'rarely') monthlyKg += 0.3 * EMISSION_FACTORS.lifestyle.new_clothes.factor;
-  if (lifestyleData.streamingHours) {
+  if (Number.isFinite(lifestyleData.streamingHours)) {
     monthlyKg += lifestyleData.streamingHours * 30 * EMISSION_FACTORS.lifestyle.streaming.factor;
   }
   if (lifestyleData.recycling === 'always') monthlyKg *= 0.85;
@@ -68,20 +93,28 @@ export function calculateLifestyleEmissions(lifestyleData) {
   return Math.round(monthlyKg * 10) / 10;
 }
 
+/**
+ * Calculates total footprint and full metrics including comparisons and equivalents.
+ * @param {Object} allData - Complete user profile data.
+ * @returns {Object} Comprehensive footprint results.
+ */
 export function calculateTotalFootprint(allData) {
+  if (!allData) return null;
   const transport = calculateTransportEmissions(allData.transport || {});
   const food = calculateFoodEmissions(allData.food || {});
   const energy = calculateEnergyEmissions(allData.energy || {});
   const lifestyle = calculateLifestyleEmissions(allData.lifestyle || {});
   const monthlyTotal = transport + food + energy + lifestyle;
-  const annualTonnes = Math.round((monthlyTotal * 12) / 100) / 10;
+  
+  const annualTonnes = Math.round((monthlyTotal * MONTHS_PER_YEAR) / KG_PER_TONNE * 10) / 10;
+  
   return {
     monthly: { transport, food, energy, lifestyle, total: Math.round(monthlyTotal * 10) / 10 },
     annual: {
-      transport: Math.round(transport * 12 / 100) / 10,
-      food: Math.round(food * 12 / 100) / 10,
-      energy: Math.round(energy * 12 / 100) / 10,
-      lifestyle: Math.round(lifestyle * 12 / 100) / 10,
+      transport: Math.round((transport * MONTHS_PER_YEAR) / KG_PER_TONNE * 10) / 10,
+      food: Math.round((food * MONTHS_PER_YEAR) / KG_PER_TONNE * 10) / 10,
+      energy: Math.round((energy * MONTHS_PER_YEAR) / KG_PER_TONNE * 10) / 10,
+      lifestyle: Math.round((lifestyle * MONTHS_PER_YEAR) / KG_PER_TONNE * 10) / 10,
       total: annualTonnes
     },
     comparison: {
@@ -97,6 +130,11 @@ export function calculateTotalFootprint(allData) {
   };
 }
 
+/**
+ * Assigns a score (0-100) and grade (A-F) based on annual tonnes of CO2.
+ * @param {number} annualTonnes - User's total annual footprint.
+ * @returns {Object} Score and grade.
+ */
 export function calculateEcoScore(annualTonnes) {
   let score;
   if (annualTonnes <= 2) score = 95;
